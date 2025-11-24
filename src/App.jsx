@@ -14,8 +14,8 @@ import Products from './features/products/Products.jsx';
 import Dashboard from './features/dashboard/Dashboard.jsx';
 import Login from './features/auth/Login.jsx';
 import Register from './features/auth/Register.jsx';
-import Orders from './features/orders/orders.jsx';
 import Ordersp from './features/orders/ordersp.jsx';
+import Customer from './features/customer/customer.jsx';
 
 const { Header, Sider, Content } = Layout;
 
@@ -65,8 +65,8 @@ function Shell() {
           items={[
             { key: 'dashboard', label: <Link to="/dashboard">Dashboard</Link> },
             { key: 'products', label: <Link to="/products">Products</Link> },
-            { key: 'orders', label: <Link to="/orders">Orders</Link> },
             { key: 'ordersp', label: <Link to="/ordersp">Orders</Link> },
+            { key: 'customer', label: <Link to="/customer">Customer</Link> },
           ]}
         />
       </Sider>
@@ -148,8 +148,8 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         {/* Default redirect inside protected area */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/orders" element={<Orders />} />
         <Route path="/ordersp" element={<Ordersp />} />
+        <Route path="/customer" element={<Customer />} />
       </Route>
 
       {/* Fallback */}

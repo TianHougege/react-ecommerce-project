@@ -10,6 +10,15 @@ export default defineConfig({
         target: 'http://localhost:4000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
+        // Expose x-total-count so the browser can read it from res.headers
+        configure: (proxy /*, options */) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            const prev = proxyRes.headers['access-control-expose-headers'];
+            proxyRes.headers['access-control-expose-headers'] = prev
+              ? `${prev}, x-total-count`
+              : 'x-total-count';
+          });
+        },
       },
     },
   },

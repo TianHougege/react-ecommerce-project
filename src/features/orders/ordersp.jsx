@@ -1,26 +1,32 @@
-import { Space, Table, Tag, Select } from 'antd';
-import { useState, useMemo, useEffect } from 'react';
+import { Space, Table, Tag, Select, Input, Button } from 'antd';
+import { useState, useMemo } from 'react';
 import { fetchOrdersAll } from './apis';
 import { useQuery } from '@tanstack/react-query';
+import DrawerP from './drawerP';
+import OrderCreateDrawer from './orderCreateDrawer';
 
 export default function ordersp() {
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ status: null });
   const statusList = ['paid', 'pending', 'shipped', 'cancelled', 'refunded'];
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(null);
 
   const {
-    data: apiData = [],
+    data: { items = [] } = {},
     isLoading,
     isFetching,
-    error,
   } = useQuery({
-    queryKey: ['all-orders'],
-    queryFn: fetchOrdersAll,
+    queryKey: ['orders.list', search],
+    queryFn: () => fetchOrdersAll({ search }),
   });
+  const allTotal = items.length;
 
   const rawList = useMemo(() => {
-    return apiData
+    return items
       .filter((o) => o && o.id != null)
       .map((o) => ({
         id: String(o.id),
@@ -31,8 +37,9 @@ export default function ordersp() {
         total: Number(o.total),
         currency: o.currency ?? 'USD',
         customerId: o.customerId ?? null,
+        __raw: o,
       }));
-  }, [apiData]);
+  }, [items]);
 
   //filter status function
   const chooseStatus = useMemo(() => {
@@ -68,16 +75,16 @@ export default function ordersp() {
 
   //time rule
   const fmtDate = (iso) => {
-    const dtf = iso
-      ? Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Taipei',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        })
-      : '-';
+    if (!iso) return '-';
+    const dtf = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Taipei',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
     return dtf.format(new Date(iso));
   };
+  const totalVisible = chooseStatus.length;
   //total currency
   const fmtMoney = (total, currency, locale = 'en-US') => {
     const n = Number(total);
@@ -98,7 +105,10 @@ export default function ordersp() {
   }));
 
   //choice status list
-  const handleOrder = useMemo(() => {});
+  const handleOrder = (val) => {
+    setFilters((prev) => ({ ...prev, status: val || null }));
+    setPage(1);
+  };
 
   const columns = [
     {
@@ -147,16 +157,29 @@ export default function ordersp() {
         title={() => {
           return (
             <Space size="small" wrap>
+              <Input.Search
+                allowClear
+                style={{ width: 260 }}
+                placeholder="Search date / customer / currency"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onSearch={(val) => setSearch((val || '').trim())}
+              />
               <Select
                 style={{ width: '120px' }}
-                defaultValue={' '}
+                allowClear
+                value={filters.status ?? undefined}
                 onChange={handleOrder}
                 options={statusSelect}
+                placeholder="STATUS"
               ></Select>
               <Tag>
-                All Orders :{' '}
-                <span style={{ marginLeft: 8 }}>{rawList.length}</span>
+                Orders Amount :{' '}
+                <span style={{ marginLeft: 8 }}>{allTotal}</span>
               </Tag>
+              <Button type="primary" onClick={() => setOpen(true)}>
+                Add Orders
+              </Button>
             </Space>
           );
         }}
@@ -164,11 +187,18 @@ export default function ordersp() {
         columns={columns}
         dataSource={chooseStatus}
         loading={isLoading || isFetching}
+        onRow={(record) => {
+          return {
+            onClick: () => {
+              setSelectedOrder(record.__raw || record);
+              setDrawerOpen(true);
+            },
+          };
+        }}
         pagination={{
           current: page,
           pageSize: pageSize,
-          total: rawList.length,
-          pageSizeOptions: ['5', '10', '20', '30'],
+          pageSizeOptions: [5, 10, 20, 30],
           showSizeChanger: true,
         }}
         onChange={(p) => {
@@ -180,6 +210,12 @@ export default function ordersp() {
           }
         }}
       ></Table>
+      <DrawerP
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        orders={selectedOrder}
+      />
+      <OrderCreateDrawer open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

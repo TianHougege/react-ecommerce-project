@@ -1,7 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import http from '../../lib/http';
-import { Table, Typography, Input, Select, Checkbox, Space, Tag } from 'antd';
+import {
+  Table,
+  Typography,
+  Input,
+  Select,
+  Checkbox,
+  Space,
+  Tag,
+  Button,
+} from 'antd';
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import ProductCreateDrawer from './ProductCreateDrawer';
 
 // --- simple debounce hook ---
 function useDebounce(value, delay = 500) {
@@ -32,6 +42,7 @@ export default function Products() {
   const [category, setCategory] = useState('');
   const [active, setActive] = useState(''); // '' | 'true' | 'false'
   const [lowStockOnly, setLowStockOnly] = useState(false); // stock < 10
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // debounce the free-text search
   const debouncedSearch = useDebounce(searchText, 600);
@@ -230,6 +241,9 @@ export default function Products() {
         >
           Stock &lt; 10
         </Checkbox>
+        <Button onClick={() => setDrawerOpen(true)} type="primary">
+          Add Product
+        </Button>
       </Space>
 
       <Typography.Title level={4} style={{ marginBottom: 16 }}>
@@ -249,6 +263,10 @@ export default function Products() {
           pageSizeOptions: [10, 20, 50],
         }}
         onChange={onTableChange}
+      />
+      <ProductCreateDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
       />
     </>
   );

@@ -128,3 +128,8 @@ async function getCurrentStatus(id) {
   const res = await http.get(`/orders/${id}`);
   return res.data?.status;
 }
+
+export async function createOrders() {
+  const res = await http.post('/orders');
+  return res.data;
+}
